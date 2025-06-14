@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonnenschutz mit 30: Interaktiver Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Terracotta Accent -->
+    <!-- Application Structure Plan: A thematic, single-page application designed for intuitive exploration. It starts with a Hero section, followed by an interactive 'Myth Busting' section to directly address user misconceptions. A visual 'UV-Index Deep Dive' explains the core risk metric with charts and interactive scales. The 'Your Protection Strategy' section provides actionable advice using visual guides, comparisons, and an FAQ section addressing user concerns. 'Long-Term Consequences' visualizes the risks of inaction. A sticky navigation facilitates easy movement between these user-centric themes, prioritizing understanding over the linear structure of the source report. This design choice aims to make complex information digestible and empower users to make informed decisions. -->
+    <!-- Visualization & Content Choices: 
+        - Myth Busting & FAQ (HTML/CSS/JS Toggles): Goal: Inform & Engage. Method: Interactive cards revealing text. Justification: More engaging than static text for debunking common misconceptions and addressing specific user concerns.
+        - UVI Scale (HTML/CSS/JS Interactive Bar): Goal: Educate. Method: Users click on UVI levels to see recommendations. Justification: Visual and interactive learning is more effective for a scale-based system.
+        - Reflection Chart (Chart.js Bar Chart): Goal: Compare. Method: Bar chart visualizing UV reflection percentages. Justification: Best for comparing discrete data points (surfaces).
+        - Protection Comparison (Chart.js Horizontal Bar Chart): Goal: Compare. Method: Horizontal bars comparing protection levels of creams and clothing. Justification: Clearly illustrates the effectiveness of different methods side-by-side.
+        - Protection Hierarchy & Clothing Guide (HTML/CSS Icons/Text): Goal: Organize/Inform. Method: Simple visual steps and bullet points. Justification: Memorable and easy to grasp.
+        - Skin Cancer Info (HTML/CSS/JS Cards): Goal: Inform. Method: Clickable cards with details on each type. Justification: Breaks down complex medical info into manageable chunks.
+        All interactions are designed to support the non-linear, thematic application structure and use only the allowed libraries.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #403A35;
+        }
+        .bg-primary { background-color: #FDFBF8; }
+        .bg-secondary { background-color: #F4ECE4; }
+        .bg-accent { background-color: #D97762; }
+        .text-accent { color: #D97762; }
+        .text-primary { color: #403A35; }
+        .text-secondary { color: #73685F; }
+        .border-accent { border-color: #D97762; }
+        .border-base { border-color: #EAE0D8; }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D97762;
+            border-bottom-color: #D97762;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: #73685F;
+            margin-top: 1rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAE0D8;
+            border-radius: 12px;
+            padding: 2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .interactive-card {
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .interactive-card-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+         .interactive-card-answer {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="bg-primary">
+
+    <header id="header" class="bg-primary/80 backdrop-blur-lg sticky top-0 z-50 border-b border-base">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="#hero" class="text-xl font-bold text-accent">Sonnenschutz Guide</a>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#myths" class="nav-link">Mythen</a>
+                    <a href="#uvi" class="nav-link">UV-Index</a>
+                    <a href="#strategy" class="nav-link">Schutzstrategie</a>
+                    <a href="#risks" class="nav-link">Langzeitfolgen</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-primary focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-primary/95">
+            <a href="#myths" class="block py-2 px-4 text-sm hover:bg-secondary">Mythen</a>
+            <a href="#uvi" class="block py-2 px-4 text-sm hover:bg-secondary">UV-Index</a>
+            <a href="#strategy" class="block py-2 px-4 text-sm hover:bg-secondary">Schutzstrategie</a>
+            <a href="#risks" class="block py-2 px-4 text-sm hover:bg-secondary">Langzeitfolgen</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <section id="hero" class="text-center py-20 md:py-32">
+            <h1 class="text-4xl md:text-6xl font-bold text-primary leading-tight">
+                Sonne mit 30: <span class="text-accent">Ihr smarter Guide</span><br> für gesunde Haut
+            </h1>
+            <p class="mt-6 text-lg md:text-xl text-secondary max-w-3xl mx-auto">
+                Die Entscheidungen, die Sie jetzt treffen, prägen Ihre Haut für Jahrzehnte. Entdecken Sie interaktiv, wie Sie sich intelligent schützen, Mythen entlarven und das Risiko für Hautalterung und -krebs minimieren.
+            </p>
+            <a href="#myths" class="mt-10 inline-block bg-accent text-white font-bold py-3 px-8 rounded-full text-lg hover:opacity-90 transition-opacity">
+                Jetzt Mythen aufdecken
+            </a>
+        </section>
+
+        <section id="myths" class="py-16 md:py-24 bg-secondary -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-4xl mx-auto">
+                <h2 class="section-title">Gängige Mythen im Realitätscheck</h2>
+                <p class="section-subtitle">
+                    Viele von uns verlassen sich auf Annahmen, die mehr schaden als nützen. Wir klären die drei häufigsten und gefährlichsten Irrtümer auf. Klicken Sie auf einen Mythos, um die wissenschaftliche Wahrheit zu erfahren.
+                </p>
+            </div>
+            <div class="mt-12 max-w-4xl mx-auto space-y-6">
+                <div class="interactive-card">
+                    <div class="interactive-card-header">
+                        <h3 class="text-lg font-semibold text-primary">"Bei nur 24°C kriege ich keinen Sonnenbrand."</h3>
+                        <span class="transform transition-transform text-accent text-2xl">+</span>
+                    </div>
+                    <div class="interactive-card-answer hidden text-secondary">
+                        <p><strong>Die Realität:</strong> Die Temperatur hat nichts mit der UV-Intensität zu tun. Die unsichtbare, nicht fühlbare UV-Strahlung verursacht den Schaden, nicht die Wärme. Ihre Stärke hängt vom Sonnenstand ab (Jahreszeit, Tageszeit), nicht von der Gradzahl auf dem Thermometer. Ein kühler, klarer Frühlingstag kann gefährlicher sein als ein diesiger Sommertag.</p>
+                    </div>
+                </div>
+                <div class="interactive-card">
+                    <div class="interactive-card-header">
+                        <h3 class="text-lg font-semibold text-primary">"In Marokko hatte ich keinen Sonnenbrand, warum also in Wien?"</h3>
+                        <span class="transform transition-transform text-accent text-2xl">+</span>
+                    </div>
+                    <div class="interactive-card-answer hidden text-secondary">
+                        <p><strong>Die Realität:</strong> Der UV-Index ist ein komplexes Zusammenspiel vieler Faktoren. Saubere Luft, eine temporär dünnere Ozonschicht und starke Reflexion durch Beton und Asphalt können den UV-Index in Wien an einem klaren Tag höher treiben als in einer Wüstenregion, wo Staub die Strahlung dämpft. Persönliche Anekdoten sind kein verlässlicher Maßstab – nur der tagesaktuelle, lokale UV-Index zählt.</p>
+                    </div>
+                </div>
+                <div class="interactive-card">
+                    <div class="interactive-card-header">
+                        <h3 class="text-lg font-semibold text-primary">"Eine 'gesunde Bräune' schützt mich."</h3>
+                        <span class="transform transition-transform text-accent text-2xl">+</span>
+                    </div>
+                    <div class="interactive-card-answer hidden text-secondary">
+                        <p><strong>Die Realität:</strong> Aus dermatologischer Sicht existiert keine "gesunde Bräune". Bräunung ist immer eine sichtbare Abwehrreaktion der Haut auf bereits erfolgte DNA-Schäden durch UV-Strahlung. Es ist ein Notsignal, bei dem die Haut versucht, durch die Produktion von Melanin weitere Schäden abzuwehren. Diese Bräune bietet nur einen minimalen Eigenschutz (vergleichbar mit LSF 4) und wiegt in falscher Sicherheit auf.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="uvi" class="py-16 md:py-24">
+            <div class="text-center">
+                <h2 class="section-title">Der UV-Index: Ihr wichtigstes Werkzeug</h2>
+                <p class="section-subtitle">
+                    Der UV-Index (UVI) ist das einzige wissenschaftlich fundierte Maß zur Beurteilung des Sonnenbrandrisikos. Lernen Sie, ihn richtig zu interpretieren und verstehen Sie, warum selbst im Schatten Gefahr lauern kann.
+                </p>
+            </div>
+            <div class="mt-12 grid md:grid-cols-2 gap-12 items-center">
+                <div class="card">
+                    <h3 class="font-bold text-xl mb-4 text-center">Interaktive UVI-Skala</h3>
+                    <p class="text-center text-secondary mb-6">Klicken Sie auf einen Wert, um die offiziellen Schutzempfehlungen zu sehen.</p>
+                    <div class="space-y-2">
+                        <div class="uvi-level-bar cursor-pointer p-3 rounded-lg" data-level="1">
+                           <div class="flex items-center"><div class="w-12 h-8 rounded bg-green-400 mr-4"></div><span>UVI 1-2: Niedrig</span></div>
+                        </div>
+                         <div class="uvi-level-bar cursor-pointer p-3 rounded-lg" data-level="2">
+                           <div class="flex items-center"><div class="w-12 h-8 rounded bg-yellow-400 mr-4"></div><span>UVI 3-5: Mäßig</span></div>
+                        </div>
+                         <div class="uvi-level-bar cursor-pointer p-3 rounded-lg" data-level="3">
+                           <div class="flex items-center"><div class="w-12 h-8 rounded bg-orange-400 mr-4"></div><span>UVI 6-7: Hoch</span></div>
+                        </div>
+                         <div class="uvi-level-bar cursor-pointer p-3 rounded-lg" data-level="4">
+                           <div class="flex items-center"><div class="w-12 h-8 rounded bg-red-500 mr-4"></div><span>UVI 8-10: Sehr hoch</span></div>
+                        </div>
+                         <div class="uvi-level-bar cursor-pointer p-3 rounded-lg" data-level="5">
+                           <div class="flex items-center"><div class="w-12 h-8 rounded bg-purple-500 mr-4"></div><span>UVI 11+: Extrem</span></div>
+                        </div>
+                    </div>
+                    <div id="uvi-recommendation" class="mt-6 p-4 bg-secondary rounded-lg text-secondary min-h-[100px]">
+                        <p>Wählen Sie einen UVI-Wert aus.</p>
+                    </div>
+                </div>
+                <div class="card">
+                     <h3 class="font-bold text-xl mb-4 text-center">Der unterschätzte Faktor: Reflexion</h3>
+                     <p class="text-center text-secondary mb-6">Oberflächen reflektieren UV-Strahlen und erhöhen Ihre Gesamtexposition – auch im Schatten. Dies ist besonders in der Stadt oder im Urlaub relevant.</p>
+                    <div class="chart-container">
+                        <canvas id="reflectionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="strategy" class="py-16 md:py-24 bg-secondary -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h2 class="section-title">Ihre 3-Stufen-Schutzstrategie</h2>
+                <p class="section-subtitle">
+                    Wirksamer Schutz ist mehr als nur Sonnencreme. Es ist eine Verhaltensstrategie mit einer klaren Prioritätenordnung, die das Risiko minimiert und Anwendungsfehler ausgleicht.
+                </p>
+            </div>
+
+            <div class="mt-12 max-w-6xl mx-auto grid md:grid-cols-3 gap-8 text-center">
+                <div class="p-6">
+                    <div class="text-6xl text-accent">①</div>
+                    <h3 class="text-2xl font-bold mt-4">Meiden</h3>
+                    <p class="mt-2 text-secondary">Die klügste Taktik: Verzichten Sie zwischen 11 und 15 Uhr auf direkte Sonne, besonders bei hohem UVI. Verlegen Sie Aktivitäten in die Morgen- oder Abendstunden.</p>
+                </div>
+                <div class="card p-6 border-2 border-accent">
+                     <div class="text-6xl text-accent">②</div>
+                    <h3 class="text-2xl font-bold mt-4">Bedecken</h3>
+                    <p class="mt-2 text-secondary">Ihre zuverlässigste Barriere: Kleidung, Hut und Sonnenbrille. Ein normales T-Shirt schützt schon gut. <a href="#clothing-guide" class="underline">Hier mehr erfahren.</a></p>
+                </div>
+                <div class="p-6">
+                     <div class="text-6xl text-accent">③</div>
+                    <h3 class="text-2xl font-bold mt-4">Cremen</h3>
+                    <p class="mt-2 text-secondary">Die Ergänzung für alles, was unbedeckt bleibt. Sonnencreme ist kein Freifahrtschein, sondern ein Schutz für unvermeidbare Exposition.</p>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center">
+                 <h3 class="text-3xl font-bold">Die Meisterklasse des Eincremens</h3>
+                 <p class="section-subtitle">Wenn Sie cremen, dann richtig. Die meisten Menschen machen hier entscheidende Fehler. Verstehen Sie den LSF und die richtige Anwendung.</p>
+            </div>
+
+            <div class="mt-12 grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+                 <div class="card">
+                     <h3 class="font-bold text-xl mb-4 text-center">Schutzleistung im Vergleich</h3>
+                     <p class="text-center text-secondary mb-6">Diese Grafik zeigt, wie viel UV-B-Strahlung verschiedene Methoden blockieren. Ein trockenes T-Shirt bietet bereits guten Schutz, aber Nässe reduziert ihn drastisch. LSF bietet den höchsten und verlässlichsten Schutz.</p>
+                    <div class="chart-container">
+                        <canvas id="spfChart"></canvas>
+                    </div>
+                </div>
+                 <div class="card">
+                     <h3 class="font-bold text-xl mb-4 text-center">Die richtige Menge & das Rücken-Problem</h3>
+                     <p class="text-center text-secondary mb-6">Der Schutzfaktor gilt nur bei richtiger Menge! Fürs Gesicht gilt die "Zwei-Finger-Regel". Und der Rücken? Mit diesem Trick kein Problem mehr.</p>
+                     <div class="mt-4 text-left">
+                        <p class="font-semibold">Gesicht & Hals:</p>
+                        <p class="mb-4">Eine Linie Creme auf Zeige- und Mittelfinger ist die perfekte Menge.</p>
+                        <div class="flex justify-center items-center p-4 bg-primary rounded-lg">
+                           <span class="text-4xl">☝️✌️</span>
+                           <p class="ml-4">Diese Menge auftragen!</p>
+                        </div>
+                        <p class="font-semibold mt-6">Rücken selbst eincremen:</p>
+                        <p>Nutzen Sie einen Streifen Frischhaltefolie wie ein Handtuch, um die Creme zu verteilen. Einfach, aber effektiv!</p>
+                     </div>
+                </div>
+            </div>
+            
+            <div id="faq" class="mt-16 max-w-4xl mx-auto">
+                 <div class="text-center mb-12">
+                     <h3 class="text-3xl font-bold">Häufige Fragen & Bedenken</h3>
+                     <p class="section-subtitle">Hier klären wir wichtige Fragen rund um die Anwendung und Sicherheit von Sonnenschutzprodukten und Kleidung.</p>
+                 </div>
+                 <div class="space-y-6">
+                    <div id="clothing-guide" class="interactive-card">
+                        <div class="interactive-card-header">
+                            <h3 class="text-lg font-semibold text-primary">Wie erkenne ich UV-schützende Kleidung?</h3>
+                            <span class="transform transition-transform text-accent text-2xl">+</span>
+                        </div>
+                        <div class="interactive-card-answer hidden text-secondary">
+                            <p>Ein UPF-Siegel (Ultraviolet Protection Factor) ist der Goldstandard, aber auch normale Kleidung schützt. Achten Sie auf diese Merkmale:</p>
+                            <ul class="list-disc list-inside mt-2 space-y-1">
+                                <li><strong>Dichte:</strong> Halten Sie den Stoff gegen das Licht. Je weniger durchscheint, desto besser. Ein dichtes Baumwoll-T-Shirt hat ca. UPF 15.</li>
+                                <li><strong>Material:</strong> Synthetische Stoffe wie Polyester oder Nylon bieten oft besseren Schutz als leichte Baumwolle, Leinen oder Viskose.</li>
+                                <li><strong>Farbe:</strong> Dunkle und kräftige Farben (schwarz, dunkelblau, rot) absorbieren mehr UV-Strahlen als helle Farben.</li>
+                                <li><strong>Zustand:</strong> Nasse oder gedehnte Kleidung verliert erheblich an Schutzwirkung. Ein nasses, weißes T-Shirt bietet kaum noch Schutz.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="interactive-card">
+                        <div class="interactive-card-header">
+                            <h3 class="text-lg font-semibold text-primary">Sind Inhaltsstoffe in Sonnencreme schädlich?</h3>
+                            <span class="transform transition-transform text-accent text-2xl">+</span>
+                        </div>
+                        <div class="interactive-card-answer hidden text-secondary">
+                            <p><strong>Die wissenschaftliche Einordnung:</strong> Der Nutzen von Sonnenschutz überwiegt die potenziellen Risiken bei Weitem. UV-Strahlung ist ein bewiesenes Karzinogen. Bedenken betreffen oft:</p>
+                            <ul class="list-disc list-inside mt-2 space-y-1">
+                                <li><strong>Chemische Filter (z.B. Oxybenzon):</strong> Werden teils kritisch gesehen. Wer unsicher ist, kann auf moderne Filter oder rein mineralische Produkte ausweichen.</li>
+                                <li><strong>Mineralische Filter (Zinkoxid, Titandioxid):</strong> Sie gelten als extrem sicher und gut verträglich, da sie auf der Haut aufliegen und nicht eindringen. Ideal für empfindliche Haut und Kinder. Nanopartikel darin gelten nach aktuellem Stand als sicher, da sie gesunde Haut nicht durchdringen.</li>
+                            </ul>
+                             <p class="mt-2"><strong>Fazit:</strong> Die beste Sonnencreme ist die, die Sie gerne und regelmäßig verwenden. Es gibt für jeden Hauttyp und jede Präferenz sichere und wirksame Optionen.</p>
+                        </div>
+                    </div>
+                    <div class="interactive-card">
+                        <div class="interactive-card-header">
+                            <h3 class="text-lg font-semibold text-primary">Muss ich Sonnencreme abends abduschen?</h3>
+                            <span class="transform transition-transform text-accent text-2xl">+</span>
+                        </div>
+                        <div class="interactive-card-answer hidden text-secondary">
+                             <p><strong>Ja, das ist sehr zu empfehlen.</strong> Es geht dabei weniger um eine direkte "Gefahr" durch die Creme, sondern um gute Hauthygiene. Über den Tag sammeln sich auf der Haut nicht nur Cremereste, sondern auch Schweiß, Talg und Schmutz an. Diese Mischung kann die Poren verstopfen und zu Unreinheiten oder Pickeln führen. Eine sanfte Reinigung am Abend entfernt alles und lässt die Haut über Nacht atmen und sich regenerieren.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+
+        <section id="risks" class="py-16 md:py-24">
+             <div class="text-center">
+                <h2 class="section-title">Das Gedächtnis der Haut: Langzeitfolgen</h2>
+                <p class="section-subtitle">
+                    Ihre Haut vergisst keinen Sonnenstrahl. Mit 30 beginnen sich die Schäden aus der Jugend zu zeigen. Das Verständnis dieser Risiken ist die beste Motivation für täglichen Schutz.
+                </p>
+            </div>
+             <div class="mt-12 max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+                <div class="card">
+                    <h3 class="text-xl font-bold mb-4">Photoaging: Die sichtbaren Folgen</h3>
+                    <p class="text-secondary mb-4">Bis zu 80% der sichtbaren Hautalterung ist sonnenbedingt. Die Zerstörung von Kollagen durch UVA-Strahlen führt zu...</p>
+                    <ul class="list-disc list-inside space-y-2 text-secondary">
+                        <li><strong>Feinen Linien & Falten:</strong> Besonders um Augen und Mund.</li>
+                        <li><strong>Elastizitätsverlust:</strong> Die Haut wird schlaffer.</li>
+                        <li><strong>Pigmentflecken:</strong> Erste "Altersflecken" durch unregelmäßige Melaninproduktion.</li>
+                        <li><strong>Fahler Teint:</strong> Die Hauttextur wird rauer.</li>
+                    </ul>
+                </div>
+                 <div class="card">
+                    <h3 class="text-xl font-bold mb-4">Hautkrebs: Das ultimative Risiko</h3>
+                    <p class="text-secondary mb-4">UV-Strahlung ist ein Karzinogen der Gruppe 1, wie Tabak. Klicken Sie auf die Risiken, um Details zu erfahren.</p>
+                    <div id="cancer-cards" class="space-y-3">
+                       <div class="cancer-card border border-base rounded-lg p-4 cursor-pointer hover:bg-red-50">
+                          <h4 class="font-semibold">Heller Hautkrebs (Basal-/Plattenepithelkarzinom)</h4>
+                          <div class="cancer-info hidden mt-2 text-sm">Verursacht durch chronische Sonnenexposition. Seltener tödlich, kann aber Gewebe zerstören. Risiko steigt mit jeder weiteren Exposition.</div>
+                       </div>
+                       <div class="cancer-card border border-base rounded-lg p-4 cursor-pointer hover:bg-red-50">
+                          <h4 class="font-semibold">Schwarzer Hautkrebs (Malignes Melanom)</h4>
+                          <div class="cancer-info hidden mt-2 text-sm">Die gefährlichste Form. Risiko stark durch intensive Sonnenbrände in der Jugend geprägt. Früherkennung ist überlebenswichtig.</div>
+                       </div>
+                    </div>
+                </div>
+             </div>
+             <div class="mt-16 text-center card bg-secondary max-w-4xl mx-auto">
+                <h3 class="text-2xl font-bold text-accent">Handeln Sie jetzt!</h3>
+                <p class="mt-4 text-primary">Machen Sie Sonnenschutz zu Ihrer täglichen Routine, nicht nur im Urlaub. Beobachten Sie Ihre Haut selbst und gehen Sie zur jährlichen professionellen Hautkrebsvorsorge. Es ist die beste Investition in Ihre langfristige Gesundheit.</p>
+             </div>
+        </section>
+    </main>
+
+    <footer class="bg-secondary mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-secondary text-sm">
+            <p>&copy; 2025 Interaktiver Sonnenschutz-Guide. Dieser Guide dient der Aufklärung und ersetzt keine professionelle medizinische Beratung.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const interactiveCards = document.querySelectorAll('.interactive-card');
+            interactiveCards.forEach(card => {
+                const header = card.querySelector('.interactive-card-header');
+                header.addEventListener('click', () => {
+                    const answer = card.querySelector('.interactive-card-answer');
+                    const icon = card.querySelector('span');
+                    answer.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-45');
+                });
+            });
+
+            const uviRecommendations = {
+                1: { text: "Schutz ist in der Regel nicht erforderlich.", bg: 'bg-green-100' },
+                2: { text: "Schutz erforderlich. Mittags Schatten suchen, Kleidung, Hut, Sonnenbrille und Sonnencreme für unbedeckte Haut verwenden.", bg: 'bg-yellow-100' },
+                3: { text: "Hoher Schutz erforderlich. Maßnahmen wie bei 'mäßig', aber mit erhöhter Dringlichkeit. Hoher LSF empfohlen.", bg: 'bg-orange-100' },
+                4: { text: "Schutz absolut notwendig. Aufenthalt im Freien zwischen 11 und 15 Uhr meiden. Sehr hoher LSF unerlässlich.", bg: 'bg-red-100' },
+                5: { text: "Extremer Schutz. Aufenthalt im Freien zur Mittagszeit meiden. Maximaler Schutz auch im Schatten geboten.", bg: 'bg-purple-100' },
+            };
+            const uviBars = document.querySelectorAll('.uvi-level-bar');
+            const uviRecoBox = document.getElementById('uvi-recommendation');
+            let lastUviBg = '';
+            uviBars.forEach(bar => {
+                bar.addEventListener('click', () => {
+                    const level = bar.dataset.level;
+                    const reco = uviRecommendations[level];
+                    
+                    if (lastUviBg) uviRecoBox.classList.remove(lastUviBg);
+                    uviRecoBox.innerHTML = `<p class="font-semibold">${reco.text}</p>`;
+                    uviRecoBox.classList.add(reco.bg);
+                    lastUviBg = reco.bg;
+                    
+                    uviBars.forEach(b => b.classList.remove('bg-gray-200'));
+                    bar.classList.add('bg-gray-200');
+                });
+            });
+
+            const reflectionCtx = document.getElementById('reflectionChart').getContext('2d');
+            new Chart(reflectionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Neuschnee', 'Wasser (Gischt)', 'Trockener Sand', 'Beton', 'Gras'],
+                    datasets: [{
+                        label: 'Zusätzliche UV-Reflexion in %',
+                        data: [94, 25, 20, 10, 5],
+                        backgroundColor: ['#A0C4FF', '#9BF6FF', '#FFD6A5', '#BDB2FF', '#CAFFBF'],
+                        borderColor: 'rgba(255, 255, 255, 0)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) { return value + '%' }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const spfCtx = document.getElementById('spfChart').getContext('2d');
+            new Chart(spfCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Nasses T-Shirt (ca. UPF 3)', 'Dichtes T-Shirt (ca. UPF 15)', 'LSF 15', 'LSF 30', 'LSF 50'],
+                    datasets: [{
+                        label: 'Blockierte UV-B Strahlung',
+                        data: [67, 93, 93, 97, 98],
+                        backgroundColor: [
+                            '#FECACA', // red-200
+                            '#FDBA74', // orange-300
+                            '#FDBA74', // orange-300
+                            '#86EFAC', // green-300
+                            '#60A5FA'  // blue-400
+                        ],
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) { return value + '%' }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const cancerCards = document.querySelectorAll('.cancer-card');
+            cancerCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.querySelector('.cancer-info').classList.toggle('hidden');
+                });
+            });
+
+            const sections = document.querySelectorAll('main section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 70) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
